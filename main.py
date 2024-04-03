@@ -36,7 +36,7 @@ def html_parse(content, url):
         description = content.split('name="description"')[1].split('"')[1]
     if re.search('<link rel="icon" href="',content):
         description = content.split('
-    if re.search('<link rel="icon" href='content):
+    if re.search('<link rel="icon" href=',content):
         icon=content.split('<link rel="icon" href=')[1].split('"')[1]
         if not url.startswith('http://') and not url.startswith('https://') and not url.startswith("//"):icon="http://"+icon
     url_template = re.compile(r"http://[A-Za-z0-9.]+\.onion")
@@ -98,7 +98,6 @@ async def onion_get_request(url, session):
         url_list = html_parse(await (response).text(), url)
     except:
         print(f"[!] Failed: {url}")
-    print("============================================================================================")
     return url_list
 
 async def main():
