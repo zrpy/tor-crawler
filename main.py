@@ -34,8 +34,6 @@ def html_parse(content, url):
         title = content.split("</title>")[0].split("<title>")[1]
     if re.search('name="description"',content):
         description = content.split('name="description"')[1].split('"')[1]
-    if re.search('<link rel="icon" href="',content):
-        description = content.split('
     if re.search('<link rel="icon" href=',content):
         icon=content.split('<link rel="icon" href=')[1].split('"')[1]
         if not url.startswith('http://') and not url.startswith('https://') and not url.startswith("//"):icon="http://"+icon
