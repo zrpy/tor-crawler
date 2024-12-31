@@ -1,9 +1,8 @@
-import aiohttp,asyncio,threading,time,re,sqlite3
-from aiohttp_socks import ProxyConnector
+import httpx,asyncio,threading,time,re,sqlite3
 base_url="https://ahmia.fi/onions/"
 
 
-def add_sql(url,title, description,icon dbname="./onion_data.db"):
+def add_sql(url,title, description,icon, dbname="./onion_data.db"):
     if url==base_url:return
     conn = sqlite3.connect(dbname)
     cur = conn.cursor()
@@ -47,10 +46,10 @@ def html_parse(content, url):
 
 async def get_request():
     start_url = base_url
-    session=aiohttp.ClientSession(connector=ProxyConnector.from_url("socks5://127.0.0.1:9050"))
+    session=httpx.AsyncClient(proxy="socks5://localhost:9050",follow_redirects=True)
     try:
-        response = await session.get("https://httpbin.org/origin")
-        print("[*] TorIP: "+await (response).json()["ip"])
+        response = await session.get("https://httpbin.org/ip")
+        print("[*] TorIP: "+response.json()["origin"])
     except:
         print(f"[!] Please run tor")
         return
@@ -90,18 +89,20 @@ async def onion_get_request(url, session):
     if url!=base_url:
         if search_sql(url) == "find":
             return url_list
-    headers = {"Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8", "Accept-Encoding": "gzip, deflate, br", "Accept-Language": "ja-JP,ja;q=0.8,en-US;q=0.5,en;q=0.3", "Host": "httpbin.org", "Sec-Fetch-Dest": "document", "Sec-Fetch-Mode": "navigate", "Sec-Fetch-Site": "cross-site", "Upgrade-Insecure-Requests": "1", "User-Agent": "Mozilla/5.0 (Android 10; Mobile; rv:109.0) Gecko/115.0 Firefox/115.0"}
+    headers = {"Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8", "Accept-Encoding": "gzip, deflate","Accept-Language": "ja","Upgrade-Insecure-Requests": "1", "User-Agent": "Mozilla/5.0 (Android 10; Mobile; rv:109.0) Gecko/115.0 Firefox/115.0"}
     try:
         response = await session.get(url, headers=headers, timeout=20)
-        url_list = html_parse(await (response).text(), url)
+        url_list = html_parse(response.text, url)
     except:
         print(f"[!] Failed: {url}")
+   
+    print("============================================================================================")
     return url_list
 
 async def main():
     with sqlite3.connect("./onion_data.db") as db:
         cur = db.cursor()
-        cur.execute("CREATE TABLE IF NOT EXISTS site(url STRING, title STRING, description STRING)")
+        cur.execute("CREATE TABLE IF NOT EXISTS site(url STRING, title STRING, description STRING, icon STRING)")
         db.commit()
     await get_request()
 
